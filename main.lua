@@ -68,6 +68,9 @@ for i = 1, #fileList do
     end
 
     if opts.mode == 'demo' then
+		fullname = opts.output..'/'..paths.basename(fileList[i].image, '.'..paths.extname(fileList[i].image))..'.txt'
+		print("Fullname: ", fullname)
+		utils.export("testfile.txt", preds_hm)
         utils.plot(img, preds_hm)
     end
 

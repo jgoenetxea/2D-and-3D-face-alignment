@@ -250,6 +250,24 @@ elif preds.shape[1]==3:
 ]=],{input=surface:float():view(3,256,256), preds = points})	
 end
 
+-- Requires fb.python
+function utils.export(filename, points)
+py.exec([=[
+file = open(name, "w")
+if preds.shape[1]==2:
+	for i in range(0, 68):
+		file.write(str(preds[i, 0] + " " + preds[i, 1] + " "))
+		file.write("\n")
+elif preds.shape[1]==3:
+	for i in range(0, 68):
+		file.write(str(preds[i, 0]) + " " 
+			     + str(preds[i, 1]) + " " 
+			     + str(preds[i, 2]) + " ")
+		file.write("\n")
+file.close()
+]=],{name = filename, preds = points})	
+end
+
 function utils.readpts(file_path)
 	lines = {}
 	for line in io.lines(file_path) do
