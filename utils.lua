@@ -268,6 +268,16 @@ file.close()
 ]=],{name = filename, preds = points})	
 end
 
+-- Requires fb.python
+function utils.saveElapsedTimes(filename, times)
+py.exec([=[
+file = open(name, "w")
+for t in times:
+	file.write(str(t))
+	file.write("\n")
+]=],{name = filename, times = times})	
+end
+
 function utils.readpts(file_path)
 	lines = {}
 	for line in io.lines(file_path) do
@@ -330,6 +340,52 @@ function utils.getFileList(opts)
     end
     print('Found '..#filesList..' images')
     return filesList
+end
+
+function utils.getRectDefFileList(opts)
+    print('Scanning directory for data...')
+    local data_path = opts.input
+    local filesList = {}
+    for f in paths.files(data_path, function (file) return file:find('.txt') end) do
+        -- Check if we have .t7, .mat, .npy or .pts file
+        local data_pts = {}
+        data_pts.fullname = data_path.."/"..f
+		data_pts.directory = data_path
+        data_pts.name = f:sub(1,#f-4)
+        data_pts.extension = f:sub(#f-2)
+
+        filesList[#filesList+1] = data_pts
+
+    end
+    print('Found '..#filesList..' images')
+    return filesList
+end
+
+function utils.loadRectDefFile(file_path)
+	-- print('File to be read: '..file_path)
+	rectList = {}
+	for line in io.lines(file_path) do
+		-- print('Read line: '..line)
+		tokens = line:split(' ')
+		local minxs = tonumber(tokens[3])
+		local maxxs = tonumber(tokens[3]) + tonumber(tokens[5])
+		local minys = tonumber(tokens[4])
+		local maxys = tonumber(tokens[4]) + tonumber(tokens[6])
+		local data_rect = {}
+		data_rect.imageLeanName = tokens[1]
+		data_rect.imageName = tokens[1]..".png"
+		data_rect.center = torch.FloatTensor{maxxs-(maxxs-minxs)/2, maxys-(maxys-minys)/2}
+		data_rect.center[2] = data_rect.center[2] - ((maxys-minys)*0.12)
+		data_rect.scale = (maxxs-minxs+maxys-minys)/195
+		data_rect.normby = math.sqrt((maxxs-minxs)*(maxys-minys))
+		data_rect.use = tokens[2]
+
+		-- print(data_rect)
+
+		rectList[#rectList+1] = data_rect
+	end
+	
+	return rectList
 end
 
 function utils.calculateMetrics(dists)
